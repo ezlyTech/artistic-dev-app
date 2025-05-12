@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 from utils import stages_info, stage_insights, development_tips, recommended_activities
 
 # --- Page Setup ---
-st.set_page_config(page_title="Child Drawing Classifier", layout="centered", page_icon="🖍️")
+st.set_page_config(page_title="Drawee | Child Drawing Classifier", layout="centered", page_icon="🎨")
 
 # --- Model Classes & Descriptions ---
 classes = [
@@ -38,7 +38,7 @@ st.markdown("""
             padding: 30px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        h1, h2, h3, h4 {
+        h1, h2, h3, h4, h5 {
             color: #ff6f61 !important;
         }
         .upload-box {
@@ -89,22 +89,41 @@ st.markdown("""
 
 
 # --- Title ---
-st.markdown("<h1 style='text-align: center;'>🎨 Child Drawing Classifier</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Based on Lowenfeld's Stages of Artistic Development</p>", unsafe_allow_html=True)
-st.markdown("---")
-
-
-# --- Learning Section ---
-st.subheader("💡 Learn about the stages")
-cols = st.columns(2)
-for i, (label, desc) in enumerate(stages_info.items()):
-    with cols[i % 2].expander(label):
-        st.markdown(f"**{desc}**")
-
+st.markdown("<h1 style='text-align: center;'>🎨 Drawee</h1>", unsafe_allow_html=True)
+st.markdown("<h6 style='text-align: center;'>Watch little hands tell big stories</h6>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align: center; font-size: 14px;'>Drawee helps parents, teachers, and child development experts understand a child's artistic growth by analyzing their drawings. Based on Lowenfeld’s stages of artistic development, Drawee reveals the creative journey behind every doodle, making it fun and easy to track artistic progress</p>", 
+    unsafe_allow_html=True
+    )
 st.markdown("---")
 
 # --- Upload UI ---
-st.subheader("📄 Upload Your Child's Drawing")
+st.markdown("<h5>📸 Upload Your Child's Drawing</h5>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    .stFileUploader {
+        border: 2px dashed #FF914D;
+        padding: 40px;
+        text-align: center;
+        border-radius: 15px;
+        background-color: #fff3e6;
+        transition: background-color 0.3s ease;
+    }
+    .stFileUploader:hover {
+        background-color: #ffe1c4;
+    }
+    .stFileUploader label { display: none; }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- Before File Upload ---
+if "last_prediction" not in st.session_state:
+    st.session_state.last_prediction = None
+if "image_data" not in st.session_state:
+    st.session_state.image_data = None
+if "analyzed_once" not in st.session_state:
+    st.session_state.analyzed_once = False
+
 
 upload = st.file_uploader("", type=["png", "jpg", "jpeg"], key="file_input", label_visibility="collapsed")
 
@@ -188,3 +207,14 @@ if upload:
         st.caption("✨ Use this result to guide learning. Speak with an educator or psychologist for further support.")
 
     show_result_dialog()
+
+# --- Learning Section ---
+st.markdown("<h5>💡 Learn about the stages</h5>", unsafe_allow_html=True)
+cols = st.columns(2)
+for i, (label, desc) in enumerate(stages_info.items()):
+    with cols[i % 2].expander(label, expanded=True):
+        st.markdown(f"**{desc}**")
+
+st.markdown("---")
+
+st.markdown("<footer style='text-align:center; padding:10px; font-size:12px;'>© 2025 Drawee. This thesis project features an AI model powered by ResNet-50 for classifying children's drawings based on Lowenfeld's stages of artistic development.</footer>", unsafe_allow_html=True)
