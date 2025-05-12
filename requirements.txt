@@ -1,7 +1,6 @@
 streamlit
-plotly
-pillow
-numpy
-opencv-python
 tensorflow
 opencv-python-headless
+Pillow
+numpy
+plotly

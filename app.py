@@ -7,7 +7,6 @@ import cv2
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import io
-from fpdf import FPDF
 import tempfile
 
 
@@ -261,65 +260,7 @@ if upload:
 
         st.caption("✨ Use this result to guide learning. Speak with an educator or psychologist for further support.")
 
-        # Fixing the PDF generation function
-        def generate_pdf(stage_name, stage_insights, confidence, img):
-            pdf = FPDF()
-            pdf.set_auto_page_break(auto=True, margin=15)
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-
-            # Title & Stage Info
-            pdf.cell(200, 10, txt=f"Stage: {stage_name}", ln=True)
-            pdf.multi_cell(0, 10, stage_insights.get(stage_name, ""))
-            pdf.cell(200, 10, txt=f"Confidence: {confidence:.2f}%", ln=True)
-
-            # Save image as PNG to a BytesIO buffer
-            img_buffer = io.BytesIO()
-            img.save(img_buffer, format="PNG")
-            img_buffer.seek(0)
-
-            # Save the BytesIO buffer to a temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_img_file:
-                temp_img_file.write(img_buffer.getvalue())  # Write the image content to the temp file
-                temp_img_file.close()  # Ensure it's saved before use
-                        
-                # Add image to the PDF using the temporary file's path
-                pdf.image(temp_img_file.name, x=10, y=pdf.get_y(), w=100, h=100)
-
-            # Save the PDF to a buffer (adjusting this part to use BytesIO properly)
-            pdf_output = io.BytesIO()
-            pdf.output(pdf_output)  # This writes to the BytesIO buffer
-            pdf_output.seek(0)  # Rewind the buffer to the beginning
-
-            # Convert to bytes and return
-            return pdf_output.getvalue()
-
-        # --- Image Download Function ---
-        def save_image():
-            image_path = "child_drawing_result.png"
-            im.save(image_path)
-            return image_path
-
         # --- Add Download Buttons ---
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button("Download as PDF"):
-                pdf_bytes = generate_pdf(stage_name, stage_insights, confidence, im)
-                st.download_button(
-                    label="Download PDF",
-                    data=pdf_bytes,
-                    file_name=f"child_drawing_{stage_name}.pdf",
-                    mime="application/pdf"
-                )
-
-        with col2:
-            if st.button("Download Image"):
-                image_path = save_image()
-                st.download_button(
-                    label="Download Image",
-                    data=image_path,
-                    file_name="child_drawing.png",
-                    mime="image/png"
-                )
+        st.button("Download Report")
                 
     show_result_dialog()
