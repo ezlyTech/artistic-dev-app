@@ -1,14 +1,11 @@
 import streamlit as st
-import time
-import plotly.graph_objects as go
-from PIL import Image
 import numpy as np
+import plotly.graph_objects as go
+import time
+from PIL import Image
 import cv2
-import tensorflow as tf
 from tensorflow.keras.models import load_model
-import io
-import tempfile
-
+from utils import stages_info, stage_insights, development_tips, recommended_activities
 
 # --- Page Setup ---
 st.set_page_config(page_title="Child Drawing Classifier", layout="centered", page_icon="🖍️")
@@ -22,51 +19,6 @@ classes = [
     "The Stage of Reasoning",
     "Adolescent Art"
 ]
-
-stage_insights = {
-    "The Scribbling Stage": "Your child's drawing shows early motor expressions and spontaneous exploration.",
-    "The Preschematic Stage": "There's early use of symbolic representation, often colorful and centered.",
-    "The Schematic Stage": "Your child is beginning to organize ideas using structured symbols like houses and people.",
-    "The Gang Age": "Your child's art reflects social awareness and improved spatial relationships.",
-    "The Stage of Reasoning": "They’re aiming for realism and logical placement of figures.",
-    "Adolescent Art": "Emotional depth and personal meaning are becoming more evident in their drawings."
-}
-
-development_tips = {
-    "The Scribbling Stage": [
-        "Encourage free movement with large paper and crayons.",
-        "Avoid asking 'What is it?' – focus on fun!"
-    ],
-    "The Preschematic Stage": [
-        "Introduce basic shapes like circles and squares.",
-        "Let them describe their drawings in their own words."
-    ],
-    "The Schematic Stage": [
-        "Give them themes like 'My Family' or 'A Day at School'.",
-        "Provide various drawing materials (markers, chalk, etc.)."
-    ],
-    "The Gang Age": [
-        "Introduce group art projects to support social interaction.",
-        "Give feedback focused on story and detail, not realism."
-    ],
-    "The Stage of Reasoning": [
-        "Encourage them to draw from real life and observe proportions.",
-        "Respect when they become self-critical — be positive."
-    ],
-    "Adolescent Art": [
-        "Let them explore emotions and complex topics visually.",
-        "Consider introducing digital art or advanced techniques."
-    ]
-}
-
-recommended_activities = {
-    "The Scribbling Stage": ["Finger painting", "Large brush strokes", "Music + drawing sessions"],
-    "The Preschematic Stage": ["Coloring books", "Drawing animals", "Shape collages"],
-    "The Schematic Stage": ["Draw a map", "Comic strips", "Daily sketching"],
-    "The Gang Age": ["Art club participation", "Design your dream room", "Collaborative murals"],
-    "The Stage of Reasoning": ["Portrait practice", "Still life drawing", "Animation basics"],
-    "Adolescent Art": ["Digital illustration", "Emotive abstract art", "Art journaling"]
-}
 
 # --- Custom CSS Styling ---
 st.markdown("""
@@ -124,24 +76,26 @@ st.markdown("""
             font-size: 18px;
             color: #ff6f61;
         }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .stApp {
+                margin: 0;
+                border-radius: 0;
+            }
+        }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- Title ---
 st.markdown("<h1 style='text-align: center;'>🎨 Child Drawing Classifier</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Based on Lowenfeld's Stages of Artistic Development</p>", unsafe_allow_html=True)
 st.markdown("---")
 
+
 # --- Learning Section ---
 st.subheader("💡 Learn about the stages")
-stages_info = {
-    "🖍️ The Scribbling Stage": "Random lines and shapes – early motor development and expression.",
-    "🌈 The Preschematic Stage": "First attempts at symbols – recognizable forms appear.",
-    "🏠 The Schematic Stage": "Consistent symbols like houses, trees, and people emerge.",
-    "👫 The Gang Age": "Peer influence and better spatial understanding.",
-    "🧠 The Stage of Reasoning": "Realism increases, and self-criticism begins.",
-    "🎭 Adolescent Art": "Art becomes a tool for emotion, self-expression, and identity."
-}
 cols = st.columns(2)
 for i, (label, desc) in enumerate(stages_info.items()):
     with cols[i % 2].expander(label):
@@ -151,34 +105,8 @@ st.markdown("---")
 
 # --- Upload UI ---
 st.subheader("📄 Upload Your Child's Drawing")
-st.markdown("""
-    <style>
-    .stFileUploader {
-        border: 2px dashed #FF914D;
-        padding: 40px;
-        text-align: center;
-        border-radius: 15px;
-        background-color: #fff3e6;
-        transition: background-color 0.3s ease;
-    }
-    .stFileUploader:hover {
-        background-color: #ffe1c4;
-    }
-    .stFileUploader label { display: none; }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- Before File Upload ---
-if "last_prediction" not in st.session_state:
-    st.session_state.last_prediction = None
-if "image_data" not in st.session_state:
-    st.session_state.image_data = None
-if "analyzed_once" not in st.session_state:
-    st.session_state.analyzed_once = False
-
 
 upload = st.file_uploader("", type=["png", "jpg", "jpeg"], key="file_input", label_visibility="collapsed")
-
 
 if upload:
     im = Image.open(upload).convert("RGB")
@@ -197,7 +125,6 @@ if upload:
             stage_name = classes[pred_class]
             confidence = percentages[pred_class] * 100
 
-        # Ensure stage_insights is properly used here
         st.markdown(f"<div class='stage-info'><strong>{stage_name}</strong><br>{stage_insights[stage_name]}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='confidence-box'>This prediction has a <strong>{confidence:.2f}%</strong> match with <strong>{stage_name}</strong>.</div>", unsafe_allow_html=True)
 
@@ -260,7 +187,4 @@ if upload:
 
         st.caption("✨ Use this result to guide learning. Speak with an educator or psychologist for further support.")
 
-        # --- Add Download Buttons ---
-        st.button("Download Report")
-                
     show_result_dialog()
