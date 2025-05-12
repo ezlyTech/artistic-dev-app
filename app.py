@@ -191,7 +191,7 @@ if upload:
     def show_result_dialog():
         with st.spinner("Analyzing your drawing... 🎯"):
             time.sleep(2)
-            model = load_model("eleyz-v1.2.h5")
+            model = load_model("model.h5")
             preds = model.predict(image)
             percentages = preds[0]
             pred_class = np.argmax(percentages)
