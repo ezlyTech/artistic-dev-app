@@ -1,118 +1,14 @@
-# drawee_app.py
-
 import streamlit as st
-from st_supabase_connection import SupabaseConnection
 import numpy as np
 import plotly.graph_objects as go
 import time
 from PIL import Image
 import cv2
 from tensorflow.keras.models import load_model
-from utils.auth import login, is_authenticated, logout
-from classes_def import stages_info, stage_insights, development_tips, recommended_activities, classes
+from utils import stages_info, stage_insights, development_tips, recommended_activities, classes
 
-st.set_page_config(page_title="Drawee", page_icon="🖼️")
 
-# --- Connect to Supabase ---
-conn = st.connection("supabase", type=SupabaseConnection)
 
-# --- Streamlit UI ---
-# --- Custom CSS Styling ---
-st.markdown("""
-    <style>
-        html, body, [class*="css"] {
-            background: url('https://images.unsplash.com/photo-1637248970116-838902fe389a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center fixed;
-            background-size: cover;
-            font-family: "Comic Sans MS", "Segoe UI", sans-serif;
-            color: #222 !important;
-        }
-        .stApp {
-            max-width: 800px;
-            margin: 30px auto;
-            background: rgba(255, 255, 255, 78%);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2, h3, h4, h5 {
-            color: #ff6f61 !important;
-        }
-        .upload-box {
-            border: 2px dashed #ffc1cc;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            background-color: #fff0f5;
-            cursor: pointer;
-        }
-        .upload-box:hover {
-            background-color: #ffeef2;
-        }
-        .confidence-box {
-            background-color: #fff3cd;
-            border-left: 5px solid #ffcc00;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
-        }
-        .stage-info {
-            background-color: #ffecf1;
-            color: #5a0033;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-        .stImage img {
-            max-width: 100%;
-            height: auto;
-        }
-        .stExpanderHeader {
-            font-weight: 600;
-            font-size: 18px;
-            color: #ff6f61;
-        }
-        
-        /* Mobile-specific styles */
-        @media (max-width: 768px) {
-            .stApp {
-                margin: 0;
-                border-radius: 0;
-            }
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- Title ---
-st.markdown("<h1 style='text-align: center;'>🎨 Drawee</h1>", unsafe_allow_html=True)
-st.markdown("<h6 style='text-align: center;'>Watch little hands tell big stories</h6>", unsafe_allow_html=True)
-st.markdown(
-    "<p style='text-align: center; font-size: 14px;'>Drawee helps parents, teachers, and child development experts understand a child's artistic growth by analyzing their drawings. Based on Lowenfeld’s stages of artistic development, Drawee reveals the creative journey behind every doodle, making it fun and easy to track artistic progress</p>", 
-    unsafe_allow_html=True
-    )
-st.markdown("---")
-
-# --- Authentication ---
-if is_authenticated():
-    st.success(f"Welcome, {st.session_state['user']['email']}!")
-    if st.button("Logout"):
-        logout()
-        st.experimental_rerun()
-    st.write("Go to the Analyze Drawing page from the sidebar.")
-else:
-    st.title("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if login(username, password):
-            st.success("Logged in!")
-            st.experimental_rerun()
-        else:
-            st.error("Invalid username or password.")
-
-    st.info("Don't have an account?")
-    st.page_link("pages/2_Create_Account.py", label="Create an account")
 
 
 
@@ -156,6 +52,7 @@ if upload:
     def show_result_dialog():
         with st.spinner("Analyzing your drawing... 🎯"):
             time.sleep(2)
+            # model = load_model("drawee-v1.7.h5")
             # model = load_model("drawee-v1.6.h5")
             model = load_model("model.h5")
             preds = model.predict(image)
@@ -229,16 +126,3 @@ if upload:
     show_result_dialog()
 
 
-# --- Learning Section ---
-st.markdown("<h5>💡 Learn about the stages</h5>", unsafe_allow_html=True)
-cols = st.columns(2)
-for i, (label, desc) in enumerate(stages_info.items()):
-    with cols[i % 2].expander(label, expanded=True):
-        st.markdown(f"**{desc}**")
-
-st.markdown("---")
-
-
-# --- Footer ---
-
-st.markdown("<footer style='text-align:center; padding:10px; font-size:12px;'>© 2025 Drawee. This thesis project features an AI model powered by ResNet-50 for classifying children's drawings based on Lowenfeld's stages of artistic development.</footer>", unsafe_allow_html=True)
