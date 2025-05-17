@@ -9,44 +9,35 @@ supabase_key = st.secrets["connections"]["supabase"]["SUPABASE_KEY"]
 # Initialize Supabase client
 supabase = create_client(supabase_url, supabase_key)
 
-
 def login(username: str, password: str) -> bool:
     """Authenticate user and store session if successful"""
-    response = supabase.table("users").select("*").eq("username", username).execute()
-    if response.data:
-        user = response.data[0]
-        if bcrypt.checkpw(password.encode(), user["password"].encode()):
-            st.session_state["user"] = user
-            return True
+    try:
+        response = supabase.table("users").select("*").eq("username", username).execute()
+        if response.data:
+            user = response.data[0]
+            if bcrypt.checkpw(password.encode(), user["password"].encode()):
+                st.session_state["user"] = user
+                return True
+    except Exception as e:
+        st.error(f"Login failed: {e}")
     return False
 
-
-
-def signup(username: str, password: str):
-    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+def signup(username: str, password: str) -> bool:
+    """Create a new user account with hashed password"""
+    hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     try:
         response = supabase.table("users").insert({
             "username": username,
-            "password": hashed
+            "password": hashed_pw
         }).execute()
-        # response.data contains your inserted row(s)
-        return {
-            "data": response.data,
-            "error": None
-        }
+        return response.data is not None
     except Exception as e:
-        return {
-            "data": None,
-            "error": str(e)
-        }
-
-
+        st.error(f"Signup failed: {e}")
+        return False
 
 def logout():
     """Clear user session"""
-    if "user" in st.session_state:
-        del st.session_state["user"]
-
+    st.session_state.pop("user", None)
 
 def is_authenticated() -> bool:
     """Check if user is logged in"""

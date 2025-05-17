@@ -8,7 +8,7 @@ import time
 from PIL import Image
 import cv2
 from tensorflow.keras.models import load_model
-from utils.auth import login, is_authenticated, logout
+from utils.auth import login, signup, is_authenticated, logout
 from classes_def import stages_info, stage_insights, development_tips, recommended_activities, classes
 
 st.set_page_config(page_title="Drawee", page_icon="🖼️")
@@ -27,11 +27,8 @@ st.markdown("""
             color: #222 !important;
         }
         .stApp {
-            max-width: 800px;
-            margin: 30px auto;
             background: rgba(255, 255, 255, 78%);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
             padding: 30px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
@@ -91,28 +88,52 @@ st.markdown(
     "<p style='text-align: center; font-size: 14px;'>Drawee helps parents, teachers, and child development experts understand a child's artistic growth by analyzing their drawings. Based on Lowenfeld’s stages of artistic development, Drawee reveals the creative journey behind every doodle, making it fun and easy to track artistic progress</p>", 
     unsafe_allow_html=True
     )
-st.markdown("---")
 
-# --- Authentication ---
+# --- If authenticated, show welcome and logout ---
 if is_authenticated():
-    st.success(f"Welcome, {st.session_state['user']['email']}!")
+    st.success(f"Welcome, {st.session_state['user']['username']}!")
     if st.button("Logout"):
         logout()
         st.experimental_rerun()
-    st.write("Go to the Analyze Drawing page from the sidebar.")
-else:
-    st.title("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if login(username, password):
-            st.success("Logged in!")
-            st.experimental_rerun()
-        else:
-            st.error("Invalid username or password.")
 
-    st.info("Don't have an account?")
-    st.page_link("pages/2_Create_Account.py", label="Create an account")
+    st.write("Use the sidebar to go to the **Analyze Drawing** page.")
+
+else:
+    st.markdown("<h5 style='text-align: center;'>Log in or create an account to start analyzing children's drawings.</h5>", unsafe_allow_html=True)
+    
+    tabs = st.tabs(["🔐 Login", "📝 Create Account"])
+
+    # --- Login Tab ---
+    with tabs[0]:
+        username = st.text_input("Username", key="login_username")
+        password = st.text_input("Password", type="password", key="login_password")
+        
+        if st.button("Login"):
+            if login(username, password):
+                st.success("Logged in successfully!")
+                st.switch_page("pages/1_Analyze.py")
+            else:
+                st.error("Invalid username or password.")
+
+    # --- Create Account Tab ---
+    with tabs[1]:
+        new_username = st.text_input("Choose a Username", key="signup_username")
+        new_password = st.text_input("Choose a Password", type="password", key="signup_password")
+        confirm_password = st.text_input("Confirm Password", type="password", key="signup_confirm")
+
+        if st.button("Sign Up"):
+            if new_password != confirm_password:
+                st.error("Passwords do not match.")
+            elif len(new_username) < 3 or len(new_password) < 5:
+                st.warning("Username must be at least 3 characters, password at least 5.")
+            else:
+                result = signup(new_username, new_password)
+                if result:
+                    st.success("Account created successfully! Logging you in...")
+                    if login(new_username, new_password):
+                        st.switch_page("pages/1_Analyze.py")
+                else:
+                    st.error("Username already taken or account creation failed.")
 
 
 
