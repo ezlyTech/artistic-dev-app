@@ -22,11 +22,11 @@ Running the Streamlit App
 
 To start the app, run:
 
-  streamlit run app.py
+  streamlit run Home.py
 
 If that doesn't work, try the long-form command:
 
-  python -m streamlit run app.py
+  python -m streamlit run Home.py
 
 To stop the Streamlit server, press Ctrl+C in the terminal.
 

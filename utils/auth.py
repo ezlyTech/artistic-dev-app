@@ -4,10 +4,14 @@ from supabase import create_client
 
 # Load Supabase credentials from secrets.toml
 supabase_url = st.secrets["connections"]["supabase"]["SUPABASE_URL"]
-supabase_key = st.secrets["connections"]["supabase"]["SUPABASE_KEY"]
+supabase_anon_key = st.secrets["connections"]["supabase"]["SUPABASE_ANON_KEY"]
+supabase_service_key = st.secrets["connections"]["supabase"]["SUPABASE_SERVICE_ROLE_KEY"]
 
-# Initialize Supabase client
-supabase = create_client(supabase_url, supabase_key)
+# Use anon key for normal client (queries with RLS)
+supabase = create_client(supabase_url, supabase_anon_key)
+
+# Use service role client for storage uploads and admin operations
+supabase_admin = create_client(supabase_url, supabase_service_key)
 
 def login(username: str, password: str) -> bool:
     """Authenticate user and store session if successful"""
@@ -42,3 +46,9 @@ def logout():
 def is_authenticated() -> bool:
     """Check if user is logged in"""
     return "user" in st.session_state
+
+def get_supabase_client():
+    return supabase
+
+def get_supabase_admin_client():
+    return supabase_admin
