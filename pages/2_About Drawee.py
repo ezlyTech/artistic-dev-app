@@ -1,9 +1,7 @@
 # drawee_app.py
 
 import streamlit as st
-import cv2
-from utils.auth import login, signup, is_authenticated, logout
-from classes_def import stages_info, stage_insights, development_tips, recommended_activities, classes
+from classes_def import stages_info
 
 st.set_page_config(page_title="About Drawee", page_icon="🖼️")
 
