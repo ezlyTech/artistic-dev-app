@@ -1,20 +1,11 @@
 # drawee_app.py
 
 import streamlit as st
-from st_supabase_connection import SupabaseConnection
-import numpy as np
-import plotly.graph_objects as go
-import time
-from PIL import Image
 import cv2
-from tensorflow.keras.models import load_model
 from utils.auth import login, signup, is_authenticated, logout
 from classes_def import stages_info, stage_insights, development_tips, recommended_activities, classes
 
 st.set_page_config(page_title="About Drawee", page_icon="🖼️")
-
-# --- Connect to Supabase ---
-conn = st.connection("supabase", type=SupabaseConnection)
 
 # --- Streamlit UI ---
 # --- Custom CSS Styling ---
