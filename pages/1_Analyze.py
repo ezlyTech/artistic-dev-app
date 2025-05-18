@@ -10,15 +10,18 @@ from tensorflow.keras.models import load_model
 from utils.auth import login, signup, is_authenticated, logout, get_supabase_client, get_supabase_admin_client
 from classes_def import stage_insights, development_tips, recommended_activities, classes
 
+# Import Child Records renderer (you'll create this next)
+import Child_Records
+
 st.set_page_config(page_title="Analyze", page_icon="🖼️")
 
-# --- Connect to Supabase (always main client) ---
 supabase_admin = get_supabase_admin_client()
-
-
 if supabase_admin is None:
     st.error("Error: Unable to connect to Supabase.")
     st.stop()
+
+# --- Get query params to detect if showing Child Records or Analyze ---
+child_id = st.query_params.get("child_id", [None])[0]
 
 # --- Custom CSS Styling ---
 st.markdown("""
@@ -73,33 +76,7 @@ st.markdown("""
             font-size: 18px;
             color: #ff6f61;
         }
-        
-        @media (max-width: 768px) {
-            .stApp {
-                margin: 0;
-                border-radius: 0;
-            }
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- If authenticated, show welcome and main UI ---
-if is_authenticated():
-    col1, col2 = st.columns([4, 1])  # Adjust width ratio as needed
-
-    with col1:
-        st.success(f"Welcome, {st.session_state['user']['username']}!")
-
-    with col2:
-        if st.button("Logout", use_container_width=True):
-            logout()
-            st.rerun()
-
-
-    # Upload UI
-    st.markdown("<h5>📸 Upload Your Child's Drawing</h5>", unsafe_allow_html=True)
-    st.markdown("""
-        <style>
+            
         .stFileUploader {
             border: 2px dashed #FF914D;
             padding: 40px;
@@ -112,118 +89,167 @@ if is_authenticated():
             background-color: #ffe1c4;
         }
         .stFileUploader label { display: none; }
-        </style>
-    """, unsafe_allow_html=True)
+        
+        @media (max-width: 768px) {
+            .stApp {
+                margin: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-    @st.cache_resource
-    def get_model():
-        return load_model("model.h5")
 
-    upload = st.file_uploader("", type=["png", "jpg", "jpeg"], key="file_input", label_visibility="collapsed")
+if is_authenticated():
 
-    if upload:
-        im = Image.open(upload).convert("RGB")
-        img = np.asarray(im)
-        image = cv2.resize(img, (224, 224)) / 255.0
-        image = np.expand_dims(image, axis=0)
+    if child_id is None:
+        # --- Show Analyze UI ---
 
-        @st.dialog("🎯 Analysis Result")
-        def show_result_dialog():
-            with st.spinner("Analyzing your drawing... 🎯"):
-                time.sleep(2)
-                model = get_model()
-                preds = model.predict(image)
-                percentages = preds[0]
-                pred_class = np.argmax(percentages)
-                stage_name = classes[pred_class]
-                confidence = percentages[pred_class] * 100
+        col1, col2 = st.columns([4, 1])  # Adjust width ratio as needed
 
-                # Upload image to Supabase Storage
-                image_bytes = io.BytesIO()
-                im.save(image_bytes, format='PNG')
-                image_bytes = image_bytes.getvalue()
+        with col1:
+            st.markdown(f"### 👋 Welcome, **{st.session_state['user']['username']}**")
 
-                filename = f"{uuid.uuid4().hex}.png"
-                storage_path = f"user_uploads/{filename}"
+        with col2:
+            if st.button("Logout", use_container_width=True):
+                logout()
+                st.rerun()
 
-                image_url = supabase_admin.storage.from_("drawings").get_public_url(storage_path)
+        # --- Existing Analyze UI here ---
 
-                # Save analysis to Supabase DB
-                supabase_admin.table("results").insert({
-                    "user_id": st.session_state["user"]["id"],
-                    "image_path": image_url,
-                    "prediction": stage_name,
-                    "confidence": float(confidence)
+        # Fetch existing children names for autocomplete
+        user_id = st.session_state['user']['id']
+        children_response = supabase_admin.table("children").select("name").eq("user_id", user_id).execute()
+        existing_children = [c['name'] for c in children_response.data] if children_response.data else []
+
+        options = ["New Record"] + existing_children
+        selected_name = st.selectbox("Select a child or create a new record:", options)
+
+        new_child_name = None
+        if selected_name == "New Record":
+            new_child_name = st.text_input("Enter new child's name")
+
+        child_name = new_child_name.strip() if new_child_name else (selected_name if selected_name != "New Record" else "")
+
+        if child_name:
+            child_response = supabase_admin.table("children").select("id").eq("user_id", user_id).eq("name", child_name).execute()
+            if child_response.data:
+                child_id_local = child_response.data[0]['id']
+            else:
+                child_id_local = str(uuid.uuid4())
+                supabase_admin.table("children").insert({
+                    "id": child_id_local,
+                    "user_id": user_id,
+                    "name": child_name
                 }).execute()
 
-            st.markdown(f"<div class='stage-info'><strong>{stage_name}</strong><br>{stage_insights[stage_name]}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='confidence-box'>This prediction has a <strong>{confidence:.2f}%</strong> match with <strong>{stage_name}</strong>.</div>", unsafe_allow_html=True)
-            st.image(im, caption='Uploaded Drawing', use_container_width=True)
+            st.session_state['current_child_id'] = child_id_local
+            st.session_state['current_child_name'] = child_name
 
-            colors = ['#ffcccc' if i != pred_class else '#ff6666' for i in range(len(classes))]
-            fig = go.Figure(go.Bar(
-                x=percentages * 100,
-                y=classes,
-                orientation='h',
-                text=[f"{p*100:.1f}%" for p in percentages],
-                textposition='outside',
-                marker=dict(color=colors, line=dict(color='#222', width=1))
-            ))
-            fig.update_layout(
-                title="Model Confidence per Artistic Stage",
-                xaxis_title="Confidence (%)",
-                yaxis_title="Stage",
-                xaxis=dict(range=[0, 100], gridcolor='lightgray'),
-                height=420,
-                template="plotly_white",
-                plot_bgcolor='#ffffff',
-                paper_bgcolor='#ffffff',
-                margin=dict(l=50, r=50, t=60, b=40)
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("<h5>📸 Upload the Drawing</h5>", unsafe_allow_html=True)
+            upload = st.file_uploader("", type=["png", "jpg", "jpeg"], key="file_input", label_visibility="collapsed")
 
-            traits = ['Symbol Use', 'Spatial Awareness', 'Realism', 'Emotion', 'Motor Skills']
-            trait_scores = np.random.uniform(50, 100, size=5)
-            radar = go.Figure(data=go.Scatterpolar(
-                r=trait_scores,
-                theta=traits,
-                fill='toself',
-                marker_color='rgba(255,105,97,0.8)'
-            ))
-            radar.update_layout(
-                polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                showlegend=False,
-                title="🌭 Artistic Trait Profile"
-            )
-            st.plotly_chart(radar, use_container_width=True)
+            @st.cache_resource
+            def get_model():
+                return load_model("model.h5")
 
-            st.subheader("🛠️ Development Tips")
-            for tip in development_tips[stage_name]:
-                st.markdown(f"- {tip}")
+            if upload:
+                im = Image.open(upload).convert("RGB")
+                img = np.asarray(im)
+                image = cv2.resize(img, (224, 224)) / 255.0
+                image = np.expand_dims(image, axis=0)
 
-            st.subheader("🎨 Activity Ideas")
-            for activity in recommended_activities[stage_name]:
-                st.markdown(f"- {activity}")
+                @st.dialog("🎯 Analysis Result")
+                def show_result_dialog():
+                    with st.spinner("Analyzing your drawing..."):
+                        time.sleep(2)
+                        model = get_model()
+                        preds = model.predict(image)
+                        percentages = preds[0]
+                        pred_class = np.argmax(percentages)
+                        stage_name = classes[pred_class]
+                        confidence = percentages[pred_class] * 100
 
-            with st.expander("🔍 Expert Perspective"):
-                st.write("This stage reflects important aspects of your child's cognitive and emotional development. It can be useful to explore their creative interests and encourage expression.")
+                        image_bytes = io.BytesIO()
+                        im.save(image_bytes, format='PNG')
+                        image_bytes = image_bytes.getvalue()
+                        filename = f"{uuid.uuid4().hex}.png"
+                        storage_path = f"user_uploads/{filename}"
 
-            st.info("📈 Want to track progress? Upload a new drawing every month and see how their style changes over time!")
-            st.caption("✨ Use this result to guide learning. Speak with an educator or psychologist for further support.")
+                        supabase_admin.storage.from_("drawings").upload(storage_path, image_bytes)
+                        image_url = supabase_admin.storage.from_("drawings").get_public_url(storage_path)
 
-        show_result_dialog()
+                        supabase_admin.table("results").insert({
+                            "user_id": user_id,
+                            "child_id": child_id_local,
+                            "image_path": image_url,
+                            "prediction": stage_name,
+                            "confidence": float(confidence)
+                        }).execute()
 
+                    st.markdown(f"**{stage_name}** - {stage_insights[stage_name]}")
+                    st.markdown(f"Confidence: **{confidence:.2f}%**")
+                    st.image(im, caption='Uploaded Drawing', use_container_width=True)
+
+                    fig = go.Figure(go.Bar(
+                        x=percentages * 100,
+                        y=classes,
+                        orientation='h',
+                        text=[f"{p*100:.1f}%" for p in percentages],
+                        textposition='outside',
+                        marker=dict(color=['#ff6666' if i == pred_class else '#ffcccc' for i in range(len(classes))])
+                    ))
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    st.subheader("Development Tips")
+                    for tip in development_tips[stage_name]:
+                        st.markdown(f"- {tip}")
+                    st.subheader("Recommended Activities")
+                    for activity in recommended_activities[stage_name]:
+                        st.markdown(f"- {activity}")
+
+                show_result_dialog()
+
+        st.markdown("---")
+
+        st.subheader("List of Children's Drawings Analyzed")
+
+        child_list = supabase_admin.table("children").select("id, name").eq("user_id", user_id).execute()
+
+        if not child_list.data:
+            st.info("No child records found yet.")
+        else:
+            col1, col2, col3 = st.columns([3, 2, 2])
+            col1.markdown("**Child Name**")
+            col2.markdown("**Number of Records**")
+            col3.markdown("**Action**")
+
+            for child in child_list.data:
+                result_count = supabase_admin.table("results").select("id", count="exact").eq("child_id", child['id']).execute().count or 0
+
+                col1, col2, col3 = st.columns([3, 2, 2])
+                col1.write(child['name'])
+                col2.write(result_count)
+
+                # Instead of st.switch_page(), set query param and rerun
+                if col3.button("View Records", key=f"view_{child['id']}"):
+                    st.query_params["child_id"] = child["id"]
+                    st.rerun()
+
+
+    else:
+        # --- Show Child Records UI ---
+        Child_Records.render()
 
 else:
     st.markdown("<h5 style='text-align: center;'>Please login or create an account first.</h5>", unsafe_allow_html=True)
-    
+
     tabs = st.tabs(["🔐 Login", "📝 Create Account"])
 
-    # --- Login Tab ---
     with tabs[0]:
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
-        
+
         if st.button("Login"):
             if login(username, password):
                 st.success("Logged in successfully!")
@@ -231,7 +257,6 @@ else:
             else:
                 st.error("Invalid username or password.")
 
-    # --- Create Account Tab ---
     with tabs[1]:
         new_username = st.text_input("Choose a Username", key="signup_username")
         new_password = st.text_input("Choose a Password", type="password", key="signup_password")
@@ -252,6 +277,6 @@ else:
                     st.error("Username already taken or account creation failed.")
 
 
-# --- Footer ---
+st.markdown("---")
 
 st.markdown("<footer style='text-align:center; padding:10px; font-size:12px;'>© 2025 Drawee. This thesis project features an AI model powered by ResNet-50 for classifying children's drawings based on Lowenfeld's stages of artistic development.</footer>", unsafe_allow_html=True)
