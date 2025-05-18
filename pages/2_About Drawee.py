@@ -15,6 +15,12 @@ st.markdown("""
             font-family: "Comic Sans MS", "Segoe UI", sans-serif;
             color: #222 !important;
         }
+        .stMainBlockContainer {
+            padding-top: 20px;
+        }
+        .stAppHeader {
+            display: none;
+        }
         .stApp {
             background: rgba(255, 255, 255, 78%);
             backdrop-filter: blur(10px);

@@ -9,7 +9,7 @@ from PIL import Image
 import cv2
 from tensorflow.keras.models import load_model
 from utils.auth import login, signup, is_authenticated, logout, get_supabase_client, get_supabase_admin_client
-from classes_def import stages_info, stage_insights, development_tips, recommended_activities, classes
+from classes_def import stages_info
 
 st.set_page_config(page_title="Drawee", page_icon="🖼️")
 
@@ -18,6 +18,7 @@ supabase = get_supabase_client()
 supabase_admin = get_supabase_admin_client()
 
 # --- Streamlit UI ---
+
 # --- Custom CSS Styling ---
 st.markdown("""
     <style>
@@ -26,6 +27,12 @@ st.markdown("""
             background-size: cover;
             font-family: "Comic Sans MS", "Segoe UI", sans-serif;
             color: #222 !important;
+        }
+        .stMainBlockContainer {
+            padding-top: 20px;
+        }
+        .stAppHeader {
+            display: none;
         }
         .stApp {
             background: rgba(255, 255, 255, 78%);
@@ -96,8 +103,6 @@ if is_authenticated():
     if st.button("Logout"):
         logout()
         st.experimental_rerun()
-
-    st.write("Use the sidebar to go to the **Analyze Drawing** page.")
 
 else:
     st.markdown("<h5 style='text-align: center;'>Log in or create an account to start analyzing children's drawings.</h5>", unsafe_allow_html=True)

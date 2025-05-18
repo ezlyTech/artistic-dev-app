@@ -32,6 +32,12 @@ st.markdown("""
             font-family: "Comic Sans MS", "Segoe UI", sans-serif;
             color: #222 !important;
         }
+        .stMainBlockContainer {
+            padding-top: 20px;
+        }
+        .stAppHeader {
+            display: none;
+        }
         .stApp {
             background: rgba(255, 255, 255, 78%);
             backdrop-filter: blur(10px);
@@ -212,29 +218,76 @@ if is_authenticated():
 
         st.markdown("---")
 
-        st.subheader("List of Children's Drawings Analyzed")
+        st.markdown("""
+        <style>
+        .child-row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 8px 0;
+            gap: 16px;
+        }
+        .child-cell {
+            flex: 1;
+            min-width: 0;
+            font-size: 13px;
+        }
+        .child-name {
+            flex: 3;
+            font-weight: 600;
+            overflow-wrap: break-word;
+        }
+        .child-count {
+            flex: 2;
+            text-align: center;
+        }
+        .child-action {
+            flex: 2;
+            text-align: center;
+        }
+        .child-action a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .child-action a:hover {
+            text-decoration: underline;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<h5>List of Children's Drawings Analyzed</h5>", unsafe_allow_html=True)
 
         child_list = supabase_admin.table("children").select("id, name").eq("user_id", user_id).execute()
 
         if not child_list.data:
             st.info("No child records found yet.")
         else:
-            col1, col2, col3 = st.columns([3, 2, 2])
-            col1.markdown("**Child Name**")
-            col2.markdown("**Number of Records**")
-            col3.markdown("**Action**")
+            # Header row
+            st.markdown("""
+            <div class="child-row" style="border-bottom: 2px solid #bbb; font-weight: 700;">
+                <div class="child-cell child-name">Child Name</div>
+                <div class="child-cell child-count">Number of Records</div>
+                <div class="child-cell child-action">Action</div>
+            </div>
+            """, unsafe_allow_html=True)
 
             for child in child_list.data:
                 result_count = supabase_admin.table("results").select("id", count="exact").eq("child_id", child['id']).execute().count or 0
 
-                col1, col2, col3 = st.columns([3, 2, 2])
-                col1.write(child['name'])
-                col2.write(result_count)
+                row_html = f"""
+                <div class="child-row">
+                    <div class="child-cell child-name">{child['name']}</div>
+                    <div class="child-cell child-count">{result_count}</div>
+                    <div class="child-cell child-action">
+                        <a href="?child_id={child['id']}">View Records</a>
+                    </div>
+                </div>
+                """
+                st.markdown(row_html, unsafe_allow_html=True)
 
-                # Instead of st.switch_page(), set query param and rerun
-                if col3.button("View Records", key=f"view_{child['id']}"):
-                    st.query_params["child_id"] = child["id"]
-                    st.rerun()
+
 
 
     else:
@@ -242,7 +295,9 @@ if is_authenticated():
         Child_Records.render()
 
 else:
-    st.markdown("<h5 style='text-align: center;'>Please login or create an account first.</h5>", unsafe_allow_html=True)
+    # --- Title ---
+    st.markdown("<h1 style='text-align: center;'>🎨 Drawee</h1>", unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: center;'>Please login or create an account first.</h6>", unsafe_allow_html=True)
 
     tabs = st.tabs(["🔐 Login", "📝 Create Account"])
 
@@ -277,6 +332,6 @@ else:
                     st.error("Username already taken or account creation failed.")
 
 
-st.markdown("---")
+# Footer
 
-st.markdown("<footer style='text-align:center; padding:10px; font-size:12px;'>© 2025 Drawee. This thesis project features an AI model powered by ResNet-50 for classifying children's drawings based on Lowenfeld's stages of artistic development.</footer>", unsafe_allow_html=True)
+st.markdown("<footer style='text-align:center; padding:10px; font-size:12px; margin-top: 5em;'>© 2025 Drawee. This thesis project features an AI model powered by ResNet-50 for classifying children's drawings based on Lowenfeld's stages of artistic development.</footer>", unsafe_allow_html=True)
