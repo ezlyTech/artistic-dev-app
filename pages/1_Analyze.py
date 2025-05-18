@@ -157,13 +157,33 @@ if is_authenticated():
 
             @st.cache_resource
             def get_model():
-                return load_model("model.h5")
+                return load_model("drawee-v1.6.h5")
 
             if upload:
                 im = Image.open(upload).convert("RGB")
                 img = np.asarray(im)
-                image = cv2.resize(img, (224, 224)) / 255.0
-                image = np.expand_dims(image, axis=0)
+                # image = cv2.resize(img, (224, 224)) / 255.0
+                # image = np.expand_dims(image, axis=0)
+
+                # Resize to (182, 183) to get 100,482 pixels (approximate)
+                # Adjust as needed to exactly 100352 if you want (e.g., crop one row or column)
+                resized_img = cv2.resize(img, (182, 183)) / 255.0  # shape (183, 182, 3)
+
+                # Flatten image to 1D vector
+                image = resized_img.reshape(1, -1)  # shape (1, 100,482) close to 100,352
+
+                # If needed, crop or pad to 100,352
+                expected_size = 100352
+
+                if image.shape[1] > expected_size:
+                    # Crop extra features
+                    image = image[:, :expected_size]
+                elif image.shape[1] < expected_size:
+                    # Pad with zeros
+                    padding = expected_size - image.shape[1]
+                    image = np.pad(image, ((0, 0), (0, padding)), mode='constant')
+
+                # Now image shape is (1, 100352) exactly
 
                 @st.dialog("🎯 Analysis Result")
                 def show_result_dialog():
