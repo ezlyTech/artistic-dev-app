@@ -85,7 +85,16 @@ st.markdown("""
 
 # --- If authenticated, show welcome and main UI ---
 if is_authenticated():
-    st.success(f"Welcome, {st.session_state['user']['username']}!")
+    col1, col2 = st.columns([4, 1])  # Adjust width ratio as needed
+
+    with col1:
+        st.success(f"Welcome, {st.session_state['user']['username']}!")
+
+    with col2:
+        if st.button("Logout", use_container_width=True):
+            logout()
+            st.rerun()
+
 
     # Upload UI
     st.markdown("<h5>📸 Upload Your Child's Drawing</h5>", unsafe_allow_html=True)
@@ -105,14 +114,6 @@ if is_authenticated():
         .stFileUploader label { display: none; }
         </style>
     """, unsafe_allow_html=True)
-
-    # Session state defaults
-    if "last_prediction" not in st.session_state:
-        st.session_state.last_prediction = None
-    if "image_data" not in st.session_state:
-        st.session_state.image_data = None
-    if "analyzed_once" not in st.session_state:
-        st.session_state.analyzed_once = False
 
     @st.cache_resource
     def get_model():
@@ -145,20 +146,7 @@ if is_authenticated():
                 filename = f"{uuid.uuid4().hex}.png"
                 storage_path = f"user_uploads/{filename}"
 
-                # Upload image to Supabase Storage
-                # upload_response = supabase_admin.storage.from_("drawings").upload(
-                #     storage_path, image_bytes, {"content-type": "image/png"}
-                # )
-
-
-                # Check if upload was successful
-                # if not isinstance(upload_response, str) or "Upload completed" not in upload_response:
-                #     st.error("Image upload failed.")
-                #     st.stop()
-
-                # Get public URL
                 image_url = supabase_admin.storage.from_("drawings").get_public_url(storage_path)
-
 
                 # Save analysis to Supabase DB
                 supabase_admin.table("results").insert({
@@ -225,10 +213,6 @@ if is_authenticated():
 
         show_result_dialog()
 
-    if st.button("Logout"):
-        logout()
-        st.experimental_rerun()
-
 
 else:
     st.markdown("<h5 style='text-align: center;'>Please login or create an account first.</h5>", unsafe_allow_html=True)
@@ -243,7 +227,7 @@ else:
         if st.button("Login"):
             if login(username, password):
                 st.success("Logged in successfully!")
-                st.switch_page("pages/1_Analyze.py")
+                st.rerun()
             else:
                 st.error("Invalid username or password.")
 
@@ -263,7 +247,7 @@ else:
                 if result:
                     st.success("Account created successfully! Logging you in...")
                     if login(new_username, new_password):
-                        st.switch_page("pages/1_Analyze.py")
+                        st.rerun()
                 else:
                     st.error("Username already taken or account creation failed.")
 
