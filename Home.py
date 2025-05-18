@@ -103,7 +103,7 @@ if is_authenticated():
     st.success(f"Welcome, {st.session_state['user']['username']}!")
     if st.button("Logout"):
         logout()
-        st.experimental_rerun()
+        st.rerun()
 
 else:
     st.markdown("<h5 style='text-align: center;'>Log in or create an account to start analyzing children's drawings.</h5>", unsafe_allow_html=True)

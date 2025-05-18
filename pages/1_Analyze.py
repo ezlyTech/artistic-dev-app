@@ -1,4 +1,6 @@
 import streamlit as st
+st.set_page_config(page_title="Analyze", page_icon="🖼️")
+
 import uuid
 import io
 import numpy as np
@@ -9,11 +11,7 @@ import cv2
 from tensorflow.keras.models import load_model
 from utils.auth import login, signup, is_authenticated, logout, get_supabase_client, get_supabase_admin_client
 from classes_def import stage_insights, development_tips, recommended_activities, classes
-
-# Import Child Records renderer (you'll create this next)
 import Child_Records
-
-st.set_page_config(page_title="Analyze", page_icon="🖼️")
 
 supabase_admin = get_supabase_admin_client()
 if supabase_admin is None:
@@ -21,7 +19,8 @@ if supabase_admin is None:
     st.stop()
 
 # --- Get query params to detect if showing Child Records or Analyze ---
-child_id = st.query_params.get("child_id", [None])[0]
+# child_id = st.query_params.get("child_id", [None])[0]
+child_id = st.session_state.get("selected_child_id", None)
 
 # --- Custom CSS Styling ---
 st.markdown("""
@@ -238,6 +237,7 @@ if is_authenticated():
 
         st.markdown("---")
 
+        # Inject CSS to style the "button" like a link
         st.markdown("""
         <style>
         .child-row {
@@ -266,53 +266,68 @@ if is_authenticated():
             flex: 2;
             text-align: center;
         }
-        .child-action a {
+        button[data-testid="baseButton"] {
+            background: none;
+            border: none;
             color: #1a73e8;
-            text-decoration: none;
             font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 13px;
         }
-        .child-action a:hover {
+        button[data-testid="baseButton"]:hover {
             text-decoration: underline;
         }
         </style>
         """, unsafe_allow_html=True)
 
+        # Title
         st.markdown("<h5>List of Children's Drawings Analyzed</h5>", unsafe_allow_html=True)
 
-        child_list = supabase_admin.table("children").select("id, name").eq("user_id", user_id).execute()
+        # Replace with your actual Supabase admin instance and authenticated user_id
+        # supabase_admin = ...
+        # user_id = ...
 
-        if not child_list.data:
-            st.info("No child records found yet.")
-        else:
-            # Header row
-            st.markdown("""
-            <div class="child-row" style="border-bottom: 2px solid #bbb; font-weight: 700;">
-                <div class="child-cell child-name">Child Name</div>
-                <div class="child-cell child-count">Number of Records</div>
-                <div class="child-cell child-action">Action</div>
-            </div>
-            """, unsafe_allow_html=True)
+        try:
+            child_list = supabase_admin.table("children").select("id, name").eq("user_id", user_id).execute()
 
-            for child in child_list.data:
-                result_count = supabase_admin.table("results").select("id", count="exact").eq("child_id", child['id']).execute().count or 0
-
-                row_html = f"""
-                <div class="child-row">
-                    <div class="child-cell child-name">{child['name']}</div>
-                    <div class="child-cell child-count">{result_count}</div>
-                    <div class="child-cell child-action">
-                        <a href="?child_id={child['id']}">View Records</a>
-                    </div>
+            if not child_list.data:
+                st.info("No child records found yet.")
+            else:
+                # Header row
+                st.markdown("""
+                <div class="child-row" style="border-bottom: 2px solid #bbb; font-weight: 700;">
+                    <div class="child-cell child-name">Child Name</div>
+                    <div class="child-cell child-count">Number of Records</div>
+                    <div class="child-cell child-action">Action</div>
                 </div>
-                """
-                st.markdown(row_html, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
+                for idx, child in enumerate(child_list.data):
+                    result_count = supabase_admin.table("results").select("id", count="exact").eq("child_id", child['id']).execute().count or 0
 
+                    cols = st.columns([3, 2, 2])  # Flex ratios
+
+                    with cols[0]:
+                        st.markdown(f"<div class='child-name'>{child['name']}</div>", unsafe_allow_html=True)
+
+                    with cols[1]:
+                        st.markdown(f"<div class='child-count'>{result_count}</div>", unsafe_allow_html=True)
+
+                    with cols[2]:
+                        if st.button("View Records", key=f"view_{idx}"):
+                            st.session_state["selected_child_id"] = child['id']
+                            st.rerun()
+
+        except Exception as e:
+            st.error(f"Error loading child records: {e}")
 
 
     else:
         # --- Show Child Records UI ---
-        Child_Records.render()
+        Child_Records.render_child_records(child_id)
 
 else:
     # --- Title ---
