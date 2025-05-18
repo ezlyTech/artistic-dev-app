@@ -1,6 +1,8 @@
 # drawee_app.py
 
 import streamlit as st
+st.set_page_config(page_title="Drawee", page_icon="🖼️")
+
 from st_supabase_connection import SupabaseConnection
 import numpy as np
 import plotly.graph_objects as go
@@ -11,7 +13,6 @@ from tensorflow.keras.models import load_model
 from utils.auth import login, signup, is_authenticated, logout, get_supabase_client, get_supabase_admin_client
 from classes_def import stages_info
 
-st.set_page_config(page_title="Drawee", page_icon="🖼️")
 
 # --- Connect to Supabase ---
 supabase = get_supabase_client()
