@@ -32,7 +32,7 @@ st.markdown("""
             color: #222 !important;
         }
         .stMainBlockContainer {
-            padding-top: 20px;
+            padding-top: 40px;
         }
         .stAppHeader {
             display: none;
@@ -109,16 +109,25 @@ if is_authenticated():
 
     if child_id is None:
         # --- Show Analyze UI ---
+        
+        with st.container():
+            st.markdown("""
+                <div style="
+                    background-color: white;
+                    padding: 1rem;
+                    border-radius: 8px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    margin-bottom: 1rem;
+                ">
+                    <div style="font-size: 1.2rem; font-weight: 600;">
+                        👋 Welcome, <strong>{username}</strong>
+                    </div>
+                </div>
+            """.format(username=st.session_state['user']['username']), unsafe_allow_html=True)
 
-        col1, col2 = st.columns([4, 1])  # Adjust width ratio as needed
-
-        with col1:
-            st.markdown(f"### 👋 Welcome, **{st.session_state['user']['username']}**")
-
-        with col2:
-            if st.button("Logout", use_container_width=True):
-                logout()
-                st.rerun()
 
         # --- Existing Analyze UI here ---
 
@@ -359,7 +368,6 @@ if is_authenticated():
     else:
         # --- Show Child Records UI ---
         Child_Records.render_child_records(child_id)
-
 else:
     # --- Title ---
     st.markdown("<h1 style='text-align: center;'>🎨 Drawee</h1>", unsafe_allow_html=True)
