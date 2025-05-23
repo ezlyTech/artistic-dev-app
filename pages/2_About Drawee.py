@@ -1,7 +1,7 @@
 # drawee_app.py
 
 import streamlit as st
-from classes_def import stages_info
+from classes_def import stages_info_copy
 
 st.set_page_config(page_title="About Drawee", page_icon="🖼️")
 
@@ -65,13 +65,41 @@ st.markdown("""
             font-size: 18px;
             color: #ff6f61;
         }
+        .book-image-container {
+          display: flex;
+          justify-content: center;
+          padding-top: 20px;
+        }
+        .book-image {
+          width: 60%;
+          height: auto;
+        }
+        .book-desc-container {
+          align-self: center;
+        }
+        .book-desc {
+          padding-inline: 20px;
+          align-self: center;
+        }
+        /*.book-desc span {
+          display: none;
+        }*/
         
         /* Mobile-specific styles */
         @media (max-width: 768px) {
-            .stApp {
-                margin: 0;
-                border-radius: 0;
-            }
+          .stApp {
+            margin: 0;
+            border-radius: 0;
+          }
+          .book-image-container {
+            padding-top:10px;
+          }
+          .book-desc-container {
+            padding: 20px 10px;
+          }
+          .book-desc {
+            text-align: center;
+          }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -85,13 +113,50 @@ st.markdown(
     )
 
 # --- Learning Section ---
+# st.markdown("<h5>💡 Learn about the stages</h5>", unsafe_allow_html=True)
+# cols = st.columns(2)
+# for i, (label, desc) in enumerate(stages_info.items()):
+#     with cols[i % 2].expander(label, expanded=True):
+#         st.markdown(f"**{desc}**")
+
+# st.markdown("---")
+
 st.markdown("<h5>💡 Learn about the stages</h5>", unsafe_allow_html=True)
 cols = st.columns(2)
-for i, (label, desc) in enumerate(stages_info.items()):
+for i, (label, info) in enumerate(stages_info_copy.items()):
     with cols[i % 2].expander(label, expanded=True):
-        st.markdown(f"**{desc}**")
-
+        st.image(info['img'], use_container_width=True)
+        st.markdown(f"**{info['desc']}**")
 st.markdown("---")
+
+# --- Lowenfeld Book Section ---
+cols = st.columns(2)
+with cols[0]:
+    # st.image(
+    #     "assets/images/book.jpg",  # Example cover image URL
+    #     use_container_width=False,
+    #     width=200
+    # )
+    st.markdown(
+        """
+        <div class="book-image-container">
+        <img src="https://ia801204.us.archive.org/BookReader/BookReaderImages.php?zip=/3/items/creativementalgr00/creativementalgr00_jp2.zip&file=creativementalgr00_jp2/creativementalgr00_0001.jp2&id=creativementalgr00&scale=4&rotate=0" alt="Book Cover" class="book-image"/>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+with cols[1]:
+    st.markdown(
+        """
+        <div class="book-desc-container">
+        <h5 class="book-desc"> Creative and Mental Growth </h5>
+        <p class="book-desc" style="font-weight: semibold; margin: 0;">By Viktor Lowenfeld</p>
+        <br>
+        <p class="book-desc">Viktor Lowenfeld’s influential book, <b>Creative and Mental Growth</b>, explores the stages of artistic development in children. This foundational work provides insights into how children express themselves through art and how their creativity evolves as they grow. Lowenfeld’s stages are widely used by educators and psychologists to understand and nurture artistic potential in young learners.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # --- Footer ---

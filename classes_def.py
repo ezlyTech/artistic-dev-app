@@ -17,6 +17,34 @@ stages_info = {
     "🎭 Adolescent Art": "Art becomes a tool for emotion, self-expression, and identity."
 }
 
+stages_info_copy = {
+    "🖍️ The Scribbling Stage": {
+        "desc": "Random lines and shapes – early motor development and expression.",
+        "img": "assets\images\stage 1.jpg"
+    },
+    "🌈 The Preschematic Stage": {
+        "desc": "First attempts at symbols – recognizable forms appear.",
+        "img": "assets\images\stage 2.jpg"
+    },
+    "🏠 The Schematic Stage": {
+        "desc": "First attempts at symbols – recognizable forms appear.",
+        "img": "assets\images\stage 3.jpg"
+    },
+    "👫 The Gang Age": {
+        "desc": "Peer influence and better spatial understanding.",
+        "img": "assets\images\stage 4.jpg"
+    },
+    "🧠 The Stage of Reasoning": {
+        "desc": "Realism increases, and self-criticism begins.",
+        "img": "assets\images\stage 5.jpg"
+    },
+    "🎭 Adolescent Art": {
+        "desc": "Art becomes a tool for emotion, self-expression, and identity.",
+        "img": "assets\images\stage 6.jpg"
+    },
+}
+
+
 stage_insights = {
     "The Scribbling Stage": "Your child's drawing shows early motor expressions and spontaneous exploration.",
     "The Preschematic Stage": "There's early use of symbolic representation, often colorful and centered.",
