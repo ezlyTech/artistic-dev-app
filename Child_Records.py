@@ -104,12 +104,12 @@ def render_child_records(child_id: str):
 
         summary_md = "\n\n".join(summary_lines)
         st.markdown(
-            f"<div style='background:#f0f2f6;padding:10px;border-radius:8px;margin-bottom:15px;'>"
+            f"<div style='background:#FFF;padding:10px 16px;border-radius:8px;margin-bottom:15px;'>"
             f"<h6 style='margin-bottom:5px;'>Summary</h6>"
             f"{summary_md}"
             f"</div>", unsafe_allow_html=True)
         st.markdown(
-            f"<div style='background:#f0f2f6;padding:10px;border-radius:8px;margin-bottom:15px;'>"
+            f"<div style='background:#e8fee8;padding:10px 16px;border-radius:8px;margin-bottom:15px;'>"
             f"<h6 style='margin-bottom:5px;'>Insight</h6>"
             f"{insight}"
             f"</div>", unsafe_allow_html=True)
@@ -149,17 +149,19 @@ def render_child_records(child_id: str):
 
     # Display each record with image, prediction, confidence, date, and delete button
     for record in records_for_chart:
-        cols = st.columns([3, 1])
+        cols = st.columns([2, 2, 1])
 
         with cols[0]:
-            st.markdown(f"<small style='color:gray;'>Date: {record['created_at_str']}</small>", unsafe_allow_html=True)
-            st.image(record["image_path"], width=150)
+            st.markdown(f"<small style='color:gray;'>Date Analyzed: {record['created_at_str']}</small>", unsafe_allow_html=True)
+            st.image(record["image_path"], width=250)
+
+        with cols[1]:
             st.markdown(f"**Prediction:** {record['prediction']}")
             st.markdown(f"**Confidence:** {record['confidence']:.2f}%")
 
-        with cols[1]:
+        with cols[2]:
             delete_key = f"delete_{record['id']}"
-            if st.button("Delete", key=delete_key):
+            if st.button("Delete Record", key=delete_key):
                 try:
                     delete_resp = supabase_admin.table("results").delete().eq("id", record["id"]).execute()
                     if delete_resp.data is not None:
