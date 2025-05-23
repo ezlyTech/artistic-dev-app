@@ -58,10 +58,15 @@ def render_child_records(child_id: str):
     for record in results:
         created_at = record.get("created_at")
         if created_at:
-            dt_utc = datetime.fromisoformat(created_at.rstrip('Z')).replace(tzinfo=ZoneInfo("UTC"))
-            dt_pht = dt_utc.astimezone(ZoneInfo("Asia/Manila"))
-            created_str = dt_pht.strftime("%b %d, %Y %I:%M %p")
-            created_date = dt_pht.date()
+            try:
+                # Parse ISO string with timezone info (if any)
+                dt_utc = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                dt_pht = dt_utc.astimezone(ZoneInfo("Asia/Manila"))
+                created_str = dt_pht.strftime("%b %d, %Y %I:%M %p")
+                created_date = dt_pht.date()
+            except ValueError:
+                created_str = "Invalid date"
+                created_date = None
         else:
             created_str = "Unknown date"
             created_date = None
