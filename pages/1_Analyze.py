@@ -250,6 +250,7 @@ if is_authenticated():
             border-bottom: 1px solid #ddd;
             padding: 8px 0;
             gap: 16px;
+            margin-bottom: 10px;
         }
         .child-cell {
             flex: 1;
@@ -257,8 +258,7 @@ if is_authenticated():
             font-size: 13px;
         }
         .child-name {
-            flex: 3;
-            font-weight: 600;
+            flex: 2;
             overflow-wrap: break-word;
         }
         .child-count {
@@ -289,10 +289,6 @@ if is_authenticated():
         # Title
         st.markdown("<h5>List of Children's Drawings Analyzed</h5>", unsafe_allow_html=True)
 
-        # Replace with your actual Supabase admin instance and authenticated user_id
-        # supabase_admin = ...
-        # user_id = ...
-
         try:
             child_list = supabase_admin.table("children").select("id, name").eq("user_id", user_id).execute()
 
@@ -308,21 +304,53 @@ if is_authenticated():
                 </div>
                 """, unsafe_allow_html=True)
 
+                # Handle query param logic
+                if "child_id" in st.query_params:
+                    st.session_state["selected_child_id"] = st.query_params["child_id"]
+
+                    # Clear query params using st.query_params (overwrite with empty dict)
+                    st.query_params.clear()
+                    st.rerun()
+
                 for idx, child in enumerate(child_list.data):
                     result_count = supabase_admin.table("results").select("id", count="exact").eq("child_id", child['id']).execute().count or 0
 
-                    cols = st.columns([3, 2, 2])  # Flex ratios
+                    # Build URL with query param for View Records
+                    view_url = f"?child_id={child['id']}"
 
-                    with cols[0]:
-                        st.markdown(f"<div class='child-name'>{child['name']}</div>", unsafe_allow_html=True)
-
-                    with cols[1]:
-                        st.markdown(f"<div class='child-count'>{result_count}</div>", unsafe_allow_html=True)
-
-                    with cols[2]:
-                        if st.button("View Records", key=f"view_{idx}"):
-                            st.session_state["selected_child_id"] = child['id']
-                            st.rerun()
+                    st.markdown(f"""
+                        <div style="
+                            border: 1px solid #ddd;
+                            border-radius: 10px;
+                            padding: 1rem;
+                            margin-bottom: 1rem;
+                            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+                            background-color: #fff;
+                            display: flex;
+                            flex-wrap: nowrap;
+                            gap: 1rem;
+                            align-items: center;
+                        ">
+                            <div style="flex: 3; font-weight: bold; font-size: 13px;">{child['name']}</div>
+                            <div style="flex: 2; color: #888; font-size: 13px;">{result_count} records</div>
+                            <div style="flex: 2;">
+                                <a href="{view_url}" style="
+                                    display: inline-block;
+                                    width: 100%;
+                                    padding: 0.5rem;
+                                    text-align: center;
+                                    background-color: rgb(233 124 124);
+                                    color: white;
+                                    text-decoration: none;
+                                    border-radius: 5px;
+                                    font-size: 13px;
+                                    line-height: 1.3;
+                                ">
+                                    View Records
+                                </a>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error loading child records: {e}")
