@@ -299,7 +299,20 @@ if is_authenticated():
         st.markdown("<h5>List of Children's Drawings Analyzed</h5>", unsafe_allow_html=True)
 
         try:
+            # Fetch children from Supabase
             child_list = supabase_admin.table("children").select("id, name").eq("user_id", user_id).execute()
+
+            # Handle delete via query param
+            delete_child_id = st.query_params.get("delete_child_id")
+            if delete_child_id:
+                try:
+                    supabase_admin.table("results").delete().eq("child_id", delete_child_id).execute()
+                    supabase_admin.table("children").delete().eq("id", delete_child_id).execute()
+                    st.success("Child and associated records deleted successfully.")
+                    st.query_params.clear()  # Clear query params
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to delete child: {e}")
 
             if not child_list.data:
                 st.info("No child records found yet.")
@@ -313,19 +326,30 @@ if is_authenticated():
                 </div>
                 """, unsafe_allow_html=True)
 
-                # Handle query param logic
+                # Handle view via query param
                 if "child_id" in st.query_params:
                     st.session_state["selected_child_id"] = st.query_params["child_id"]
-
-                    # Clear query params using st.query_params (overwrite with empty dict)
                     st.query_params.clear()
                     st.rerun()
 
                 for idx, child in enumerate(child_list.data):
                     result_count = supabase_admin.table("results").select("id", count="exact").eq("child_id", child['id']).execute().count or 0
-
-                    # Build URL with query param for View Records
                     view_url = f"?child_id={child['id']}"
+                    delete_form = f"""
+                        <form method="get" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this child and all associated records?');">
+                            <input type="hidden" name="delete_child_id" value="{child['id']}" />
+                            <button type="submit" style="
+                                flex: 0;
+                                padding: 0.4rem 0.6rem;
+                                background-color: #eee;
+                                color: #f00;
+                                border-radius: 5px;
+                                font-weight: bold;
+                                border: none;
+                                cursor: pointer;
+                            " title="Delete">🗑️</button>
+                        </form>
+                    """
 
                     st.markdown(f"""
                         <div style="
@@ -336,27 +360,23 @@ if is_authenticated():
                             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
                             background-color: #fff;
                             display: flex;
-                            flex-wrap: nowrap;
                             gap: 1rem;
                             align-items: center;
+                            font-size: 13px;
                         ">
-                            <div style="flex: 3; font-weight: bold; font-size: 13px;">{child['name']}</div>
-                            <div style="flex: 2; color: #888; font-size: 13px;">{result_count} records</div>
-                            <div style="flex: 2;">
+                            <div style="flex: 3; font-weight: bold;">{child['name']}</div>
+                            <div style="flex: 2; color: #888;">{result_count} record(s)</div>
+                            <div style="flex: 2; display: flex; gap: 0.5rem;">
                                 <a href="{view_url}" style="
-                                    display: inline-block;
-                                    width: 100%;
-                                    padding: 0.5rem;
+                                    flex: 1;
+                                    padding: 0.4rem;
                                     text-align: center;
                                     background-color: rgb(233 124 124);
                                     color: white;
                                     text-decoration: none;
                                     border-radius: 5px;
-                                    font-size: 13px;
-                                    line-height: 1.3;
-                                ">
-                                    View Records
-                                </a>
+                                ">View Records</a>
+                                <span>{delete_form}</span>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
