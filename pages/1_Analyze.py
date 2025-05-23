@@ -120,7 +120,7 @@ if is_authenticated():
                     justify-content: space-between;
                     align-items: center;
                     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    margin-bottom: 1rem;
+                    margin-bottom: 2rem;
                 ">
                     <div style="font-size: 1.2rem; font-weight: 600;">
                         👋 Welcome, <strong>{username}</strong>
@@ -376,7 +376,7 @@ if is_authenticated():
                                     text-decoration: none;
                                     border-radius: 5px;
                                 ">View Records</a>
-                                <span>{delete_form}</span>
+                                <span style="display: flex; align-items: center;">{delete_form}</span>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)

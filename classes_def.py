@@ -9,12 +9,12 @@ classes = [
 ]
 
 stages_info = {
-    "🖍️ The Scribbling Stage": "Random lines and shapes – early motor development and expression.",
-    "🌈 The Preschematic Stage": "First attempts at symbols – recognizable forms appear.",
-    "🏠 The Schematic Stage": "Consistent symbols like houses, trees, and people emerge.",
-    "👫 The Gang Age": "Peer influence and better spatial understanding.",
-    "🧠 The Stage of Reasoning": "Realism increases, and self-criticism begins.",
-    "🎭 Adolescent Art": "Art becomes a tool for emotion, self-expression, and identity."
+    "🖍️ The Scribbling Stage (2-4 years old)": "Random lines and shapes – early motor development and expression.",
+    "🌈 The Preschematic Stage (4-7 years old)": "First attempts at symbols – recognizable forms appear.",
+    "🏠 The Schematic Stage (7-9 years old)": "Consistent symbols like houses, trees, and people emerge.",
+    "👫 The Gang Age (9-11 years old)": "Peer influence and better spatial understanding.",
+    "🧠 The Stage of Reasoning (11-13 years old)": "Realism increases, and self-criticism begins.",
+    "🎭 Adolescent Art (13-17 years old)": "Art becomes a tool for emotion, self-expression, and identity."
 }
 
 stages_info_copy = {

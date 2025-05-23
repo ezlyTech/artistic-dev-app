@@ -94,16 +94,14 @@ st.markdown("""
 st.markdown("<h1 style='text-align: center;'>🎨 Drawee</h1>", unsafe_allow_html=True)
 st.markdown("<h6 style='text-align: center;'>Watch little hands tell big stories</h6>", unsafe_allow_html=True)
 st.markdown(
-    "<p style='text-align: center; font-size: 14px;'>Drawee helps parents, teachers, and child development experts understand a child's artistic growth by analyzing their drawings. Based on Lowenfeld’s stages of artistic development, Drawee reveals the creative journey behind every doodle, making it fun and easy to track artistic progress</p>", 
+    "<p style='text-align: center; font-size: 14px; margin-bottom: 50px;'>Drawee helps parents, teachers, and child development experts understand a child's artistic growth by analyzing their drawings. Based on Lowenfeld’s stages of artistic development, Drawee reveals the creative journey behind every doodle, making it fun and easy to track artistic progress</p>", 
     unsafe_allow_html=True
     )
 
 # --- If authenticated, show welcome and logout ---
 if is_authenticated():
-    st.success(f"Welcome, {st.session_state['user']['username']}!")
-    if st.button("Logout", use_container_width=True):
-        logout()
-        st.rerun()
+    if st.button("Analyze Drawings", use_container_width=True):
+        st.switch_page("pages/1_Analyze.py")
 
 else:
     st.markdown("<h5 style='text-align: center;'>Log in or create an account to start analyzing children's drawings.</h5>", unsafe_allow_html=True)
@@ -145,14 +143,22 @@ else:
 
 
 # --- Learning Section ---
-st.markdown("<h5 style='margin-top: 50px;'>💡 Learn about the stages</h5>", unsafe_allow_html=True)
+st.markdown("<h5 style='margin-top: 40px;'>💡 Learn about the stages</h5>", unsafe_allow_html=True)
 cols = st.columns(2)
 for i, (label, desc) in enumerate(stages_info.items()):
     with cols[i % 2].expander(label, expanded=True):
         st.markdown(f"**{desc}**")
 
-st.markdown("---")
+if st.button("Learn More About Drawee", use_container_width=True):
+    st.switch_page("pages/2_About Drawee.py")
 
+if is_authenticated():
+    if st.button("Logout", use_container_width=True):
+        logout()
+        st.rerun()
+
+
+st.markdown("---")
 
 # --- Footer ---
 
