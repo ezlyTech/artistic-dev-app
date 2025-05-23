@@ -3,7 +3,7 @@
 import streamlit as st
 from classes_def import stages_info_copy
 
-st.set_page_config(page_title="About Drawee", page_icon="🖼️")
+st.set_page_config(page_title="Drawee | About Drawee", page_icon="🖼️")
 
 # --- Streamlit UI ---
 # --- Custom CSS Styling ---

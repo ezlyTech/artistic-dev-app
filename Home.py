@@ -101,21 +101,21 @@ st.markdown(
 # --- If authenticated, show welcome and logout ---
 if is_authenticated():
     st.success(f"Welcome, {st.session_state['user']['username']}!")
-    if st.button("Logout"):
+    if st.button("Logout", use_container_width=True):
         logout()
         st.rerun()
 
 else:
     st.markdown("<h5 style='text-align: center;'>Log in or create an account to start analyzing children's drawings.</h5>", unsafe_allow_html=True)
     
-    tabs = st.tabs(["🔐 Login", "📝 Create Account"])
+    tabs = st.tabs(["🔐 Login", "📝 Create an Account"])
 
     # --- Login Tab ---
     with tabs[0]:
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
         
-        if st.button("Login"):
+        if st.button("Login", use_container_width=True):
             if login(username, password):
                 st.success("Logged in successfully!")
                 st.switch_page("pages/1_Analyze.py")
@@ -128,7 +128,7 @@ else:
         new_password = st.text_input("Choose a Password", type="password", key="signup_password")
         confirm_password = st.text_input("Confirm Password", type="password", key="signup_confirm")
 
-        if st.button("Sign Up"):
+        if st.button("Create Account", use_container_width=True):
             if new_password != confirm_password:
                 st.error("Passwords do not match.")
             elif len(new_username) < 3 or len(new_password) < 5:
@@ -145,7 +145,7 @@ else:
 
 
 # --- Learning Section ---
-st.markdown("<h5>💡 Learn about the stages</h5>", unsafe_allow_html=True)
+st.markdown("<h5 style='margin-top: 50px;'>💡 Learn about the stages</h5>", unsafe_allow_html=True)
 cols = st.columns(2)
 for i, (label, desc) in enumerate(stages_info.items()):
     with cols[i % 2].expander(label, expanded=True):

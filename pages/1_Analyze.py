@@ -1,5 +1,5 @@
 import streamlit as st
-st.set_page_config(page_title="Analyze", page_icon="🖼️")
+st.set_page_config(page_title="Drawee | Analyze", page_icon="🖼️")
 
 import uuid
 import io
@@ -156,33 +156,36 @@ if is_authenticated():
 
             @st.cache_resource
             def get_model():
-                return load_model("drawee-v1.6.h5")
+                # return load_model("drawee-v1.6.h5") # okay naman, pero 40% accuracy
+                # return load_model("drawee-v1.6.5.h5") # puro schematic sya 100%
+                # return load_model("drawee-v1.6.4.h5") # puro gang sya, di tumatama sa scribbling
+                # return load_model("drawee-v1.6.2.h5") # puro scribbling sya 100%
+                return load_model("drawee-v1.7.h5")
 
             if upload:
                 im = Image.open(upload).convert("RGB")
                 img = np.asarray(im)
-                # image = cv2.resize(img, (224, 224)) / 255.0
-                # image = np.expand_dims(image, axis=0)
 
-                # Resize to (182, 183) to get 100,482 pixels (approximate)
-                # Adjust as needed to exactly 100352 if you want (e.g., crop one row or column)
-                resized_img = cv2.resize(img, (182, 183)) / 255.0  # shape (183, 182, 3)
+                # v.1.6+ (ResNet50 Model)
+                # resized_img = cv2.resize(img, (182, 183)) / 255.0
+                # image = resized_img.reshape(1, -1)  # Flatten image to 1D vector
 
-                # Flatten image to 1D vector
-                image = resized_img.reshape(1, -1)  # shape (1, 100,482) close to 100,352
+                # # If needed, crop or pad to 100,352
+                # expected_size = 100352
 
-                # If needed, crop or pad to 100,352
-                expected_size = 100352
+                # if image.shape[1] > expected_size:
+                #     # Crop extra features
+                #     image = image[:, :expected_size]
+                # elif image.shape[1] < expected_size:
+                #     # Pad with zeros
+                #     padding = expected_size - image.shape[1]
+                #     image = np.pad(image, ((0, 0), (0, padding)), mode='constant')
 
-                if image.shape[1] > expected_size:
-                    # Crop extra features
-                    image = image[:, :expected_size]
-                elif image.shape[1] < expected_size:
-                    # Pad with zeros
-                    padding = expected_size - image.shape[1]
-                    image = np.pad(image, ((0, 0), (0, padding)), mode='constant')
 
-                # Now image shape is (1, 100352) exactly
+                # v.7 (Xception Model)
+                resized_img = cv2.resize(img, (256, 256))
+                resized_img = resized_img / 255.0
+                image = np.expand_dims(resized_img, axis=0)
 
                 @st.dialog("🎯 Analysis Result")
                 def show_result_dialog():
@@ -334,13 +337,13 @@ else:
     st.markdown("<h1 style='text-align: center;'>🎨 Drawee</h1>", unsafe_allow_html=True)
     st.markdown("<h6 style='text-align: center;'>Please login or create an account first.</h6>", unsafe_allow_html=True)
 
-    tabs = st.tabs(["🔐 Login", "📝 Create Account"])
+    tabs = st.tabs(["🔐 Login", "📝 Create an Account"])
 
     with tabs[0]:
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
 
-        if st.button("Login"):
+        if st.button("Login", use_container_width=True):
             if login(username, password):
                 st.success("Logged in successfully!")
                 st.rerun()
@@ -352,7 +355,7 @@ else:
         new_password = st.text_input("Choose a Password", type="password", key="signup_password")
         confirm_password = st.text_input("Confirm Password", type="password", key="signup_confirm")
 
-        if st.button("Sign Up"):
+        if st.button("Create Account", use_container_width=True):
             if new_password != confirm_password:
                 st.error("Passwords do not match.")
             elif len(new_username) < 3 or len(new_password) < 5:
