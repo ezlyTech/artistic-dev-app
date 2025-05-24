@@ -2,6 +2,7 @@
 
 import streamlit as st
 from classes_def import stages_info_copy
+import os
 
 st.set_page_config(page_title="Drawee | About Drawee", page_icon="🖼️")
 
@@ -113,20 +114,16 @@ st.markdown(
     )
 
 # --- Learning Section ---
-# st.markdown("<h5>💡 Learn about the stages</h5>", unsafe_allow_html=True)
-# cols = st.columns(2)
-# for i, (label, desc) in enumerate(stages_info.items()):
-#     with cols[i % 2].expander(label, expanded=True):
-#         st.markdown(f"**{desc}**")
-
-# st.markdown("---")
-
 st.markdown("<h5>💡 Learn about the stages</h5>", unsafe_allow_html=True)
 cols = st.columns(2)
 for i, (label, info) in enumerate(stages_info_copy.items()):
     with cols[i % 2].expander(label, expanded=True):
-        st.image(info['img'], use_container_width=True)
-        st.markdown(f"**{info['desc']}**")
+        image_path = info["img"]
+        if os.path.exists(image_path):
+            st.image(image_path, use_container_width=True)
+        else:
+            st.warning(f"Image not found: {image_path}")
+        st.markdown(f"<div style='font-size: 14px; margin-bottom: 20px;'>{info['desc']}</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --- Lowenfeld Book Section ---
