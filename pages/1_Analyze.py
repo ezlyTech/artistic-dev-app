@@ -4,6 +4,8 @@ st.set_page_config(page_title="Drawee | Analyze", page_icon="🖼️")
 import uuid
 import io
 import numpy as np
+import os
+import gdown
 import plotly.graph_objects as go
 import time
 from PIL import Image
@@ -104,6 +106,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def get_model():
+    file_id = "1_4pP1CIC_DSRa7wHXaTMSjY4nJbR9XO0"
+    output_path = "model_cache/drawee-v1.7.h5"
+
+    # Make sure the directory exists
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    # Download only if the file doesn't already exist
+    if not os.path.exists(output_path):
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, output_path, quiet=False)
+
+    return load_model(output_path)
 
 if is_authenticated():
 
@@ -163,13 +178,13 @@ if is_authenticated():
             st.markdown("<h5>📸 Upload the Drawing</h5>", unsafe_allow_html=True)
             upload = st.file_uploader("", type=["png", "jpg", "jpeg"], key="file_input", label_visibility="collapsed")
 
-            @st.cache_resource
-            def get_model():
-                # return load_model("drawee-v1.6.h5") # okay naman, pero 40% accuracy
-                # return load_model("drawee-v1.6.5.h5") # puro schematic sya 100%
-                # return load_model("drawee-v1.6.4.h5") # puro gang sya, di tumatama sa scribbling
-                # return load_model("drawee-v1.6.2.h5") # puro scribbling sya 100%
-                return load_model("drawee-v1.7.h5")
+            # @st.cache_resource
+            # def get_model():
+            #     # return load_model("drawee-v1.6.h5") # okay naman, pero 40% accuracy
+            #     # return load_model("drawee-v1.6.5.h5") # puro schematic sya 100%
+            #     # return load_model("drawee-v1.6.4.h5") # puro gang sya, di tumatama sa scribbling
+            #     # return load_model("drawee-v1.6.2.h5") # puro scribbling sya 100%
+            #     return load_model("drawee-v1.7.h5")
 
             if upload:
                 im = Image.open(upload).convert("RGB")
